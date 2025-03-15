@@ -1,54 +1,54 @@
 'use client';
 
 import { DashboardLayout } from '@/components/layouts/DashboardLayout';
-import { useInstruments } from '@/hooks/useInstruments';
 import { useMarketData } from '@/hooks/useMarketData';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TimeFrame } from '@/models/marketData';
 import { CandlestickChart } from '@/components/charts/CandlestickChart';
 import { TimeframeSelector } from '@/components/charts/TimeframeSelector';
 import { useParams } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
+import { instrumentService } from '@/services/instrumentService';
 
 export default function InstrumentDetailPage() {
   const params = useParams();
   const symbol = params.symbol as string;
   const [timeframe, setTimeframe] = useState<TimeFrame>('1d');
 
-  // Obtenemos los datos del instrumento
-  const { getInstrumentWithQuote } = useInstruments();
-  const [instrument, setInstrument] = useState<any>(null);
-  const [isLoadingInstrument, setIsLoadingInstrument] = useState(true);
+  // Obtenemos los datos del instrumento usando React Query directamente
+  const { data: instrument, isLoading: isLoadingInstrument } = useQuery({
+    queryKey: ['instrument', symbol],
+    queryFn: () => instrumentService.getInstrumentWithQuote(symbol),
+    enabled: !!symbol,
+    staleTime: 30 * 1000, // 30 segundos
+    refetchOnWindowFocus: false,
+  });
+
+  // Calculamos el límite de datos según el timeframe seleccionado
+  const getLimitForTimeframe = () => {
+    switch (timeframe) {
+      case '1d':
+        return 30; // 30 días
+      case '1w':
+        return 12; // 12 semanas
+      case '1M':
+        return 12; // 12 meses
+      default:
+        return 30;
+    }
+  };
 
   // Obtenemos los datos de mercado históricos
   const { data: marketData, isLoading: isLoadingMarketData } = useMarketData({
     symbol,
     timeframe,
-    limit: 100,
+    limit: getLimitForTimeframe(),
   });
 
   // Manejar el cambio de timeframe
   const handleTimeframeChange = (newTimeframe: TimeFrame) => {
     setTimeframe(newTimeframe);
   };
-
-  // Cargar los datos del instrumento
-  useEffect(() => {
-    const fetchInstrument = async () => {
-      setIsLoadingInstrument(true);
-      try {
-        const data = await getInstrumentWithQuote(symbol);
-        setInstrument(data);
-      } catch (error) {
-        console.error('Error fetching instrument:', error);
-      } finally {
-        setIsLoadingInstrument(false);
-      }
-    };
-
-    if (symbol) {
-      fetchInstrument();
-    }
-  }, [symbol, getInstrumentWithQuote]);
 
   // Calcular variación en el precio en el periodo seleccionado
   const calculatePriceChange = () => {

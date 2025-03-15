@@ -5,13 +5,14 @@ import { marketDataService } from '@/services/marketDataService';
 import { MarketDataParams, TimeFrame } from '@/models/marketData';
 
 export function useMarketData(params: MarketDataParams) {
-  const { symbol, timeframe } = params;
+  const { symbol, timeframe, limit } = params;
 
   const marketDataQuery = useQuery({
-    queryKey: ['marketData', symbol, timeframe, params],
+    queryKey: ['marketData', symbol, timeframe, limit],
     queryFn: () => marketDataService.getHistoricalData(params),
     staleTime: 5 * 60 * 1000, // 5 minutos
     enabled: !!symbol && !!timeframe,
+    refetchOnWindowFocus: false,
   });
 
   // Hook para obtener datos optimizados para visualización
@@ -21,6 +22,7 @@ export function useMarketData(params: MarketDataParams) {
       queryFn: () => marketDataService.getOptimizedHistoricalData(symbol, timeframe, days),
       staleTime: 5 * 60 * 1000, // 5 minutos
       enabled: !!symbol && !!timeframe,
+      refetchOnWindowFocus: false,
     });
   };
 

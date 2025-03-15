@@ -140,6 +140,19 @@ export function CandlestickChart({
           width={60}
           tickFormatter={(value) => value.toFixed(0)}
         />
+        {showVolume && (
+          <YAxis
+            yAxisId="volume"
+            orientation="right"
+            domain={[0, maxVolume * 1.1]}
+            tickFormatter={(value) => (value / 1000000).toFixed(1) + 'M'}
+            tick={{ fontSize: 10 }}
+            tickCount={4}
+            width={60}
+            axisLine={false}
+            tickLine={false}
+          />
+        )}
         <Tooltip
           labelFormatter={(label) =>
             new Date(Number(label)).toLocaleDateString(undefined, {
