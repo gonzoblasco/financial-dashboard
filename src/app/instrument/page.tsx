@@ -6,12 +6,13 @@ import { InstrumentsTable } from '@/components/data-display/InstrumentsTable';
 import { InstrumentCard } from '@/components/data-display/InstrumentCard';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Instrument, InstrumentWithQuote } from '@/models/instruments';
 
 export default function InstrumentsPage() {
   const { instrumentsWithQuotes, isLoading, searchInstruments } = useInstruments();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredInstruments, setFilteredInstruments] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
+  const [filteredInstruments, setFilteredInstruments] = useState<InstrumentWithQuote[]>([]);
+  const [searchResults, setSearchResults] = useState<Instrument[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const router = useRouter();
