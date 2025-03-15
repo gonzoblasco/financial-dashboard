@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -12,15 +12,42 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Asegúrate de que estos estilos estén disponibles para clases de Tailwind dark: */
+.dark .dark\:bg-dark-bg {
+  background-color: #121212;
+}
+
+.dark .dark\:bg-dark-card {
+  background-color: #1e1e1e;
+}
+
+.dark .dark\:border-dark-border {
+  border-color: #2e2e2e;
+}
+
+.dark .dark\:text-dark-text {
+  color: #e0e0e0;
+}
+
+.dark .dark\:text-gray-300 {
+  color: #d1d5db;
+}
+
+.dark .dark\:text-gray-400 {
+  color: #9ca3af;
+}
+
+.dark .dark\:text-gray-500 {
+  color: #6b7280;
 }

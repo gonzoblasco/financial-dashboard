@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setThemeMode, ThemeMode } from '@/store/slices/uiSlice';
 
 export function useTheme() {
   const dispatch = useAppDispatch();
   const themeMode = useAppSelector((state) => state.ui.themeMode);
+  const [mounted, setMounted] = useState(false);
 
   // Determinar el tema real basado en la preferencia del sistema si es necesario
   const actualTheme =
@@ -16,7 +17,14 @@ export function useTheme() {
         : 'light'
       : themeMode;
 
+  // Evitar problemas de hidratación marcando cuando el componente está montado
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     // Aplicar clase al documento para modo oscuro
     if (actualTheme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -25,24 +33,23 @@ export function useTheme() {
     }
 
     // Guardar preferencia en LocalStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('theme', themeMode);
-    }
-  }, [themeMode, actualTheme]);
+    localStorage.setItem('theme', themeMode);
+  }, [themeMode, actualTheme, mounted]);
 
   // Recuperar tema guardado al iniciar
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme') as ThemeMode | null;
-      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
-        dispatch(setThemeMode(savedTheme));
-      }
+    if (!mounted) return;
+
+    const savedTheme = localStorage.getItem('theme') as ThemeMode | null;
+    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+      dispatch(setThemeMode(savedTheme));
     }
-  }, [dispatch]);
+  }, [dispatch, mounted]);
 
   return {
     themeMode,
     actualTheme,
     setThemeMode: (mode: ThemeMode) => dispatch(setThemeMode(mode)),
+    mounted, // Útil para evitar parpadeos de tema
   };
 }
