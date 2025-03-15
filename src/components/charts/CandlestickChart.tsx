@@ -12,7 +12,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { OHLCV } from '@/models/marketData';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTheme } from '@/hooks/useTheme';
 
 interface CandlestickChartProps {
@@ -33,39 +33,49 @@ export function CandlestickChart({
   const [activeTooltipIndex, setActiveTooltipIndex] = useState<number | null>(null);
 
   // Calculamos el mínimo y máximo para el dominio del eje Y
-  const minValue = Math.min(...data.map((d) => d.low)) * 0.998;
-  const maxValue = Math.max(...data.map((d) => d.high)) * 1.002;
+  const { minValue, maxValue } = useMemo(() => {
+    const min = Math.min(...data.map((d) => d.low)) * 0.998;
+    const max = Math.max(...data.map((d) => d.high)) * 1.002;
+    return { minValue: min, maxValue: max };
+  }, [data]);
 
   // Colores para las velas según el tema
-  const colors = {
-    up: actualTheme === 'dark' ? '#22c55e' : '#16a34a',
-    down: actualTheme === 'dark' ? '#ef4444' : '#dc2626',
-    tooltip: actualTheme === 'dark' ? '#1e1e1e' : '#ffffff',
-    grid: actualTheme === 'dark' ? '#2e2e2e' : '#e5e7eb',
-    volume: {
-      up: actualTheme === 'dark' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(22, 163, 74, 0.3)',
-      down: actualTheme === 'dark' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(220, 38, 38, 0.3)',
-    },
-  };
+  const colors = useMemo(
+    () => ({
+      up: actualTheme === 'dark' ? '#22c55e' : '#16a34a',
+      down: actualTheme === 'dark' ? '#ef4444' : '#dc2626',
+      tooltip: actualTheme === 'dark' ? '#1e1e1e' : '#ffffff',
+      grid: actualTheme === 'dark' ? '#2e2e2e' : '#e5e7eb',
+      volume: {
+        up: actualTheme === 'dark' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(22, 163, 74, 0.3)',
+        down: actualTheme === 'dark' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(220, 38, 38, 0.3)',
+      },
+    }),
+    [actualTheme]
+  );
 
   // Transformar datos para el gráfico
-  const chartData = data.map((item) => ({
-    ...item,
-    // Para las barras de velas
-    wickTop: item.open > item.close ? item.open : item.close,
-    wickBottom: item.open < item.close ? item.open : item.close,
-    candleHeight: Math.abs(item.open - item.close),
-    // Dirección de la vela
-    isUp: item.close >= item.open,
-    // Para el volumen
-    volumeColor: item.close >= item.open ? colors.volume.up : colors.volume.down,
-    color: item.close >= item.open ? colors.up : colors.down,
-    // Para tooltip y formato
-    formattedDate: new Date(item.timestamp).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    }),
-  }));
+  const chartData = useMemo(
+    () =>
+      data.map((item) => ({
+        ...item,
+        // Para las barras de velas
+        wickTop: item.open > item.close ? item.open : item.close,
+        wickBottom: item.open < item.close ? item.open : item.close,
+        candleHeight: Math.abs(item.open - item.close),
+        // Dirección de la vela
+        isUp: item.close >= item.open,
+        // Para el volumen
+        volumeColor: item.close >= item.open ? colors.volume.up : colors.volume.down,
+        color: item.close >= item.open ? colors.up : colors.down,
+        // Para tooltip y formato
+        formattedDate: new Date(item.timestamp).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+        }),
+      })),
+    [data, colors]
+  );
 
   // Formato para los valores del eje X
   const formatXAxis = (timestamp: number) => {
@@ -81,8 +91,11 @@ export function CandlestickChart({
   };
 
   // Normalizamos los valores del volumen para que se vean bien en el gráfico
-  const maxVolume = Math.max(...data.map((d) => d.volume));
-  const volumeScale = ((maxValue - minValue) * 0.2) / maxVolume;
+  const { maxVolume, volumeScale } = useMemo(() => {
+    const maxVol = Math.max(...data.map((d) => d.volume));
+    const volScale = ((maxValue - minValue) * 0.2) / maxVol;
+    return { maxVolume: maxVol, volumeScale: volScale };
+  }, [data, maxValue, minValue]);
 
   // Manejador para el movimiento del mouse en el gráfico
   const handleMouseMove = useCallback((e: any) => {
