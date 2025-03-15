@@ -42,11 +42,7 @@ export function InstrumentsTable({ instruments, onSelectInstrument }: Instrument
     }
 
     // Ordenar
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     if (valueA < valueB) return sortDirection === 'asc' ? -1 : 1;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
     if (valueA > valueB) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
